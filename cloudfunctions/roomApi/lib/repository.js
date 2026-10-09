@@ -51,7 +51,7 @@ function createCloudRepository() {
     },
 
     async updateRoom(roomId, patch) {
-      await db.collection('rooms').doc(roomId).update({ data: patch });
+      await db.collection('rooms').doc(roomId).update({ data: withoutId(patch) });
     },
 
     async saveRoomView(view) {
@@ -83,7 +83,7 @@ function createCloudRepository() {
             return result.data || null;
           },
           async updateRoom(patch) {
-            await transaction.collection('rooms').doc(roomId).update({ data: patch });
+            await transaction.collection('rooms').doc(roomId).update({ data: withoutId(patch) });
           },
           async saveRoomView(view) {
             await transaction.collection('room_views')

@@ -86,3 +86,19 @@ test('room transaction rolls back all writes when the mutator throws', async () 
   assert.equal((await repository.getRoom('room-1')).status, undefined);
   assert.equal(await repository.getHand('room-1', 1, 'owner'), null);
 });
+
+test('updateRoom ignores _id in the patch and keeps the document id', async () => {
+  const repository = createMemoryRepository();
+  await repository.createRoom({
+    _id: 'room-1',
+    roomCode: '123456',
+    deckRemaining: [],
+    players: []
+  });
+
+  await repository.updateRoom('room-1', { _id: 'room-2', status: 'playing' });
+
+  const room = await repository.getRoom('room-1');
+  assert.equal(room._id, 'room-1');
+  assert.equal(room.status, 'playing');
+});

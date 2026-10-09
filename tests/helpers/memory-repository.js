@@ -4,6 +4,11 @@ function clone(value) {
     : JSON.parse(JSON.stringify(value));
 }
 
+function withoutId(value) {
+  const { _id, ...data } = value;
+  return data;
+}
+
 function createMemoryRepository() {
   const rooms = new Map();
   const views = new Map();
@@ -36,7 +41,7 @@ function createMemoryRepository() {
         error.code = 'ROOM_NOT_FOUND';
         throw error;
       }
-      rooms.set(roomId, { ...current, ...clone(patch) });
+      rooms.set(roomId, { ...current, ...clone(withoutId(patch)) });
     },
 
     async saveRoomView(view) {
@@ -73,7 +78,7 @@ function createMemoryRepository() {
         },
         async updateRoom(patch) {
           const current = rooms.get(roomId);
-          rooms.set(roomId, { ...current, ...clone(patch) });
+          rooms.set(roomId, { ...current, ...clone(withoutId(patch)) });
         },
         async saveRoomView(view) {
           views.set(view._id, clone(view));
