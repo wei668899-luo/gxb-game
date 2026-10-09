@@ -1,0 +1,48 @@
+<view class="page-shell room-page">
+  <view class="room-code-card">
+    <view class="room-code-label">房间号</view>
+    <view class="room-code-value">{{room.roomCode}}</view>
+    <view class="room-code-hint">人数 {{room.players.length}} / 13</view>
+  </view>
+
+  <view class="section-title">玩家</view>
+  <view class="player-grid">
+    <view
+      class="player-card"
+      wx:for="{{room.players}}"
+      wx:key="openid"
+    >
+      <image
+        wx:if="{{item.avatarUrl}}"
+        class="player-avatar"
+        src="{{item.avatarUrl}}"
+        mode="aspectFill"
+      />
+      <view wx:else class="player-avatar player-avatar-text">
+        {{item.initial}}
+      </view>
+      <view class="player-name">{{item.nickname}}</view>
+      <view class="player-tags">
+        <text wx:if="{{item.isOwner}}" class="tag owner-tag">房主</text>
+        <text class="tag {{item.ready ? 'ready-tag' : ''}}">
+          {{item.ready ? '已准备' : (item.hasHand ? '已发牌' : '未准备')}}
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <view class="room-actions">
+    <button
+      wx:if="{{isOwner}}"
+      class="primary-button"
+      loading="{{dealing}}"
+      disabled="{{!room.canDeal || dealing}}"
+      bindtap="onStartDeal"
+    >
+      {{room.roundNumber === 0 ? '开始发牌' : '重新发牌'}}
+    </button>
+
+    <button class="secondary-button" open-type="share">分享房间</button>
+    <button class="text-button" bindtap="onLeaveRoom">退出房间</button>
+  </view>
+</view>

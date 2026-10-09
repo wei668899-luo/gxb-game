@@ -1,0 +1,107 @@
+.room-page {
+  display: flex;
+  flex-direction: column;
+  gap: 36rpx;
+}
+
+.room-code-card {
+  padding: 40rpx;
+  border-radius: 20rpx;
+  background: #0f5132;
+  color: #ffffff;
+  text-align: center;
+}
+
+.room-code-label,
+.room-code-hint {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 26rpx;
+}
+
+.room-code-value {
+  margin: 12rpx 0;
+  font-size: 64rpx;
+  font-weight: 700;
+  letter-spacing: 8rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20rpx;
+}
+
+.player-card {
+  min-height: 190rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.player-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #e5ebe6;
+}
+
+.player-avatar-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f5132;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.player-name {
+  margin-top: 14rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.player-tags {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 12rpx;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: #eef1ef;
+  color: #66756d;
+  font-size: 22rpx;
+}
+
+.owner-tag {
+  background: #d8eadf;
+  color: #0f5132;
+}
+
+.ready-tag {
+  background: #d8eadf;
+  color: #0f5132;
+}
+
+.room-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.text-button {
+  background: transparent;
+  color: #66756d;
+  font-size: 30rpx;
+}
