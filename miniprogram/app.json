@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/room/room",
+    "pages/table/table"
+  ],
+  "window": {
+    "navigationBarTitleText": "广西水鱼",
+    "navigationBarBackgroundColor": "#0f5132",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f3f0e8"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

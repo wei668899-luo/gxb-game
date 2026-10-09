@@ -1,1 +1,7 @@
 .worktrees/
+node_modules/
+miniprogram_npm/
+.DS_Store
+project.private.config.json
+cloudfunctions/*/node_modules/
+coverage/
