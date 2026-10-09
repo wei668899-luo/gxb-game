@@ -1,0 +1,139 @@
+.table-page {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.table-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  border-radius: 16rpx;
+  background: #0f5132;
+  color: #ffffff;
+}
+
+.status-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 25rpx;
+}
+
+.status-value {
+  margin-top: 8rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.table-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 1fr);
+  gap: 24rpx;
+  min-height: 720rpx;
+}
+
+.card-slot {
+  min-width: 0;
+  min-height: 330rpx;
+  padding: 20rpx;
+  border: 3rpx dashed rgba(15, 81, 50, 0.24);
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.card-slot.dragging {
+  transform: scale(0.96);
+  opacity: 0.68;
+}
+
+.card-slot.drop-target {
+  border-color: #0f5132;
+  background: #e2eee6;
+}
+
+.playing-card {
+  width: 100%;
+  height: 100%;
+  min-height: 280rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #18251f;
+  box-shadow: 0 10rpx 24rpx rgba(24, 37, 31, 0.14);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22rpx;
+  box-sizing: border-box;
+}
+
+.red-card {
+  color: #b42318;
+}
+
+.card-rank {
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.card-suit {
+  align-self: flex-end;
+  font-size: 68rpx;
+  line-height: 1;
+}
+
+.table-empty {
+  min-height: 720rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  border: 3rpx dashed #cbd4ce;
+  border-radius: 20rpx;
+}
+
+.empty-title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.player-strip {
+  display: flex;
+  gap: 16rpx;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+}
+
+.strip-player {
+  flex: 0 0 180rpx;
+  padding: 18rpx;
+  border-radius: 14rpx;
+  background: #ffffff;
+}
+
+.strip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.strip-state {
+  margin-top: 8rpx;
+  color: #66756d;
+  font-size: 23rpx;
+}
+
+.ready-bar {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}

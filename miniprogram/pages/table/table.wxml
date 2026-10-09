@@ -1,0 +1,62 @@
+<view class="page-shell table-page">
+  <view class="table-status">
+    <view>
+      <view class="status-label">第 {{room.roundNumber}} 轮</view>
+      <view class="status-value">剩余底牌 {{room.remainingDeckCount}} 张</view>
+    </view>
+    <view class="status-label">
+      {{waitingForNextRound ? '等待下一局' : (hasHand ? '已发牌' : '等待发牌')}}
+    </view>
+  </view>
+
+  <view class="table-board" wx:if="{{hasHand}}">
+    <view
+      class="card-slot {{draggingIndex === index ? 'dragging' : ''}} {{dropIndex === index ? 'drop-target' : ''}}"
+      wx:for="{{slots}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtouchstart="onTouchStart"
+      bindtouchmove="onTouchMove"
+      bindtouchend="onTouchEnd"
+      bindtouchcancel="onTouchEnd"
+    >
+      <view class="playing-card {{item.isRed ? 'red-card' : ''}}">
+        <view class="card-rank">{{item.rank}}</view>
+        <view class="card-suit">{{item.suitText}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="table-empty" wx:else>
+    <view class="empty-title">等待下一局</view>
+    <view class="muted">房主发牌后，这里会出现你的四张牌。</view>
+  </view>
+
+  <view class="player-strip">
+    <view class="strip-player" wx:for="{{room.players}}" wx:key="openid">
+      <view class="strip-name">{{item.nickname}}</view>
+      <view class="strip-state">
+        {{item.ready ? '已准备' : (item.hasHand ? '已发牌' : '等待')}}
+      </view>
+    </view>
+  </view>
+
+  <view class="ready-bar" wx:if="{{hasHand || waitingForNextRound}}">
+    <button
+      class="{{ownReady ? 'secondary-button' : 'primary-button'}}"
+      disabled="{{savingReady}}"
+      bindtap="onToggleReady"
+    >
+      {{ownReady ? '取消准备' : '下一局准备'}}
+    </button>
+    <button
+      wx:if="{{isOwner && room.canDeal}}"
+      class="primary-button"
+      loading="{{dealing}}"
+      disabled="{{dealing}}"
+      bindtap="onStartNextDeal"
+    >
+      发下一轮
+    </button>
+  </view>
+</view>
