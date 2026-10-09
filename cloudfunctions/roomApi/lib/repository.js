@@ -79,8 +79,15 @@ function createCloudRepository() {
       return db.runTransaction(async (transaction) => {
         const tx = {
           async getRoom() {
-            const result = await transaction.collection('rooms').doc(roomId).get();
-            return result.data || null;
+            try {
+              const result = await transaction.collection('rooms').doc(roomId).get();
+              return result.data || null;
+            } catch (error) {
+              if (error.errCode === -1 || /not exist/i.test(error.message || '')) {
+                return null;
+              }
+              throw error;
+            }
           },
           async updateRoom(patch) {
             await transaction.collection('rooms').doc(roomId).update({ data: withoutId(patch) });
