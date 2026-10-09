@@ -137,3 +137,9 @@
   flex-direction: column;
   gap: 20rpx;
 }
+
+.text-button {
+  background: transparent;
+  color: #66756d;
+  font-size: 30rpx;
+}

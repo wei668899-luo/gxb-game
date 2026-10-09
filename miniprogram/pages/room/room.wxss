@@ -93,6 +93,16 @@
   color: #0f5132;
 }
 
+.online-tag {
+  background: #d8eadf;
+  color: #0f5132;
+}
+
+.offline-tag {
+  background: #f0e5e1;
+  color: #8a4d43;
+}
+
 .room-actions {
   margin-top: auto;
   display: flex;

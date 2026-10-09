@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { AppError, toPublicError } = require('../cloudfunctions/roomApi/lib/errors');
 const {
   toRoomPatch,
+  syncRoomViewsWith,
   syncRoomViews
 } = require('../cloudfunctions/roomApi/lib/room-view');
 const { createMemoryRepository } = require('./helpers/memory-repository');
@@ -46,4 +47,28 @@ test('syncRoomViews writes one view for every current player', async () => {
   const views = await repository.listRoomViews('room-1');
   assert.deepEqual(views.map((view) => view.openid).sort(), ['a', 'b']);
   assert.equal(views[0].players.length, 2);
+});
+
+test('syncRoomViewsWith writes every view through a transaction target', async () => {
+  const savedViews = [];
+  const room = {
+    _id: 'room-1',
+    roomCode: '123456',
+    ownerOpenid: 'a',
+    status: 'waiting',
+    players: [
+      { openid: 'a', nickname: 'A', avatarUrl: '', joinedRound: 1, ready: false, lastSeenAt: 1000 },
+      { openid: 'b', nickname: 'B', avatarUrl: '', joinedRound: 1, ready: false, lastSeenAt: 1000 }
+    ],
+    roundNumber: 0,
+    deckRemaining: [],
+    readyOpenids: []
+  };
+
+  await syncRoomViewsWith({
+    saveRoomView: async (view) => savedViews.push(view)
+  }, room, 1000);
+
+  assert.deepEqual(savedViews.map((view) => view.openid).sort(), ['a', 'b']);
+  assert.equal(savedViews.every((view) => view.roomId === 'room-1'), true);
 });

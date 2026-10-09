@@ -43,6 +43,15 @@ test('first deal gives every player four unique cards and uses the deck', async 
   assert.equal(result.reshuffled, false);
   assert.equal((await repository.getHand(room.roomId, 1, 'p-1')).slots.length, 4);
   assert.equal((await repository.getHand(room.roomId, 1, 'p-4')).slots.length, 4);
+
+  const views = await repository.listRoomViews(room.roomId);
+  assert.equal(views.length, 4);
+  assert.equal(views.every((view) => view.roundNumber === 1), true);
+  assert.equal(views.every((view) => view.status === 'playing'), true);
+  assert.equal(views.every((view) => view.players.length === 4), true);
+  assert.equal(views.every((view) => (
+    view.players.find((player) => player.openid === view.openid).hasHand
+  )), true);
 });
 
 test('the same deal request is idempotent', async () => {
@@ -68,4 +77,33 @@ test('insufficient deck is reshuffled to 54 before dealing', async () => {
   );
   assert.equal(result.reshuffled, true);
   assert.equal(result.remainingDeckCount, 38);
+});
+
+test('deal authorization follows the authoritative transaction snapshot', async () => {
+  const { repository, deps, room } = await setup(4);
+  const staleBeforeTransfer = await repository.getRoom(room.roomId);
+  const racingRepository = {
+    ...repository,
+    async getRoom() {
+      return { ...staleBeforeTransfer, ownerOpenid: 'p-1' };
+    },
+    async runRoomTransaction(roomId, mutator) {
+      await repository.updateRoom(roomId, { ownerOpenid: 'p-2' });
+      return repository.runRoomTransaction(roomId, mutator);
+    }
+  };
+
+  await assert.rejects(
+    dealRound(
+      { roomId: room.roomId, expectedRoundNumber: 0, requestId: 'deal-1' },
+      { openid: 'p-1' },
+      { ...deps, repository: racingRepository }
+    ),
+    (error) => error.code === 'NOT_ROOM_OWNER'
+  );
+
+  const stored = await repository.getRoom(room.roomId);
+  assert.equal(stored.ownerOpenid, 'p-2');
+  assert.equal(stored.roundNumber, 0);
+  assert.equal(await repository.getHand(room.roomId, 1, 'p-1'), null);
 });

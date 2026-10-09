@@ -4,6 +4,7 @@ const { createMemoryRepository } = require('./helpers/memory-repository');
 const createRoom = require('../cloudfunctions/roomApi/handlers/create-room');
 const joinRoom = require('../cloudfunctions/roomApi/handlers/join-room');
 const leaveRoom = require('../cloudfunctions/roomApi/handlers/leave-room');
+const dealRound = require('../cloudfunctions/roomApi/handlers/deal-round');
 
 function deps(repository) {
   let nextId = 0;
@@ -157,4 +158,65 @@ test('leaveRoom transfers ownership from the latest committed room without a sta
     (await repository.listRoomViews(room.roomId)).map((view) => view.openid),
     ['p-2']
   );
+});
+
+test('joinRoom rejects a room that is already expired', async () => {
+  const repository = createMemoryRepository();
+  const dependency = deps(repository);
+  const room = await createRoom(
+    { nickname: '房主', avatarUrl: '' },
+    { openid: 'owner' },
+    dependency
+  );
+  await repository.updateRoom(room.roomId, { expiresAt: 500 });
+
+  await assert.rejects(
+    joinRoom(
+      { roomCode: room.roomCode, nickname: '玩家2', avatarUrl: '' },
+      { openid: 'p-2' },
+      dependency
+    ),
+    (error) => error.code === 'ROOM_NOT_FOUND'
+  );
+});
+
+test('the first player to rejoin an empty room becomes the owner and can deal', async () => {
+  const repository = createMemoryRepository();
+  const dependency = deps(repository);
+  const room = await createRoom(
+    { nickname: '房主', avatarUrl: '' },
+    { openid: 'owner' },
+    dependency
+  );
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家2', avatarUrl: '' },
+    { openid: 'p-2' },
+    dependency
+  );
+  await leaveRoom({ roomId: room.roomId }, { openid: 'owner' }, dependency);
+  await leaveRoom({ roomId: room.roomId }, { openid: 'p-2' }, dependency);
+
+  const emptyRoom = await repository.getRoom(room.roomId);
+  assert.equal(emptyRoom.players.length, 0);
+  assert.equal(emptyRoom.ownerOpenid, '');
+
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家2', avatarUrl: '' },
+    { openid: 'p-2' },
+    dependency
+  );
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家3', avatarUrl: '' },
+    { openid: 'p-3' },
+    dependency
+  );
+
+  const recovered = await repository.getRoom(room.roomId);
+  assert.equal(recovered.ownerOpenid, 'p-2');
+  const result = await dealRound(
+    { roomId: room.roomId, expectedRoundNumber: 0, requestId: 'deal-1' },
+    { openid: 'p-2' },
+    dependency
+  );
+  assert.equal(result.roundNumber, 1);
 });

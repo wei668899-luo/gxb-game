@@ -14,14 +14,26 @@ function createCleanupRepository() {
       return result.data;
     },
 
+    async getRoom(roomId) {
+      try {
+        const result = await db.collection('rooms').doc(roomId).get();
+        return result.data || null;
+      } catch (error) {
+        if (error.errCode === -1 || /not exist/i.test(error.message || '')) {
+          return null;
+        }
+        throw error;
+      }
+    },
+
     async removeRoomCascade(roomId) {
-      await db.collection('rooms').doc(roomId).remove();
       for (const collectionName of ['room_views', 'hands']) {
         const snapshot = await db.collection(collectionName).where({ roomId }).get();
         await Promise.all(snapshot.data.map((item) => (
           db.collection(collectionName).doc(item._id).remove()
         )));
       }
+      await db.collection('rooms').doc(roomId).remove();
     }
   };
 }

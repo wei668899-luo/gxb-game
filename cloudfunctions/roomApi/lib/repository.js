@@ -112,7 +112,6 @@ function createCloudRepository() {
     },
 
     async removeRoomCascade(roomId) {
-      await db.collection('rooms').doc(roomId).remove();
       const collections = ['room_views', 'hands'];
       for (const collectionName of collections) {
         const snapshot = await db.collection(collectionName).where({ roomId }).get();
@@ -120,6 +119,7 @@ function createCloudRepository() {
           db.collection(collectionName).doc(item._id).remove()
         )));
       }
+      await db.collection('rooms').doc(roomId).remove();
     }
   };
 }

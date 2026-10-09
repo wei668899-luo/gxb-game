@@ -3,8 +3,10 @@ async function runCleanup(repository, now) {
   const deletedRoomIds = [];
 
   for (const room of expiredRooms) {
-    await repository.removeRoomCascade(room._id);
-    deletedRoomIds.push(room._id);
+    const currentRoom = await repository.getRoom(room._id);
+    if (!currentRoom || currentRoom.expiresAt > now) continue;
+    await repository.removeRoomCascade(currentRoom._id);
+    deletedRoomIds.push(currentRoom._id);
   }
 
   return { deletedRoomIds };

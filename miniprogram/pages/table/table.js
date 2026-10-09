@@ -14,6 +14,7 @@ const {
 } = require('../../utils/card-layout');
 const { newRequestId } = require('../../utils/validation');
 
+const HEARTBEAT_INTERVAL_MS = 60 * 1000;
 const SUIT_TEXT = {
   S: '♠',
   H: '♥',
@@ -85,14 +86,25 @@ Page({
       const result = await roomApi.heartbeat(roomId);
       this.setData({ openid: result.openid });
       this.startRoomWatch();
+      this.startHeartbeat();
     } catch (error) {
       clearActiveRoom();
+      app.globalData.activeRoomId = '';
       showError(error);
+      setTimeout(() => wx.reLaunch({ url: '/pages/index/index' }), 800);
     }
   },
 
   onReady() {
     this.measureSlots();
+  },
+
+  onShow() {
+    if (this.data.roomId) this.startHeartbeat();
+  },
+
+  onHide() {
+    this.stopHeartbeat();
   },
 
   startRoomWatch() {
@@ -138,6 +150,18 @@ Page({
     }, () => {
       this.measureSlots();
     });
+  },
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      roomApi.heartbeat(this.data.roomId).catch(() => {});
+    }, HEARTBEAT_INTERVAL_MS);
+  },
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
   },
 
   measureSlots() {
@@ -226,8 +250,27 @@ Page({
     }
   },
 
+  onLeaveRoom() {
+    wx.showModal({
+      title: '退出房间',
+      content: '退出后将移除你的席位。',
+      success: async (result) => {
+        if (!result.confirm) return;
+        try {
+          await roomApi.leaveRoom(this.data.roomId);
+          app.globalData.activeRoomId = '';
+          clearActiveRoom();
+          wx.reLaunch({ url: '/pages/index/index' });
+        } catch (error) {
+          showError(error);
+        }
+      }
+    });
+  },
+
   onUnload() {
     if (this.roomWatcher) this.roomWatcher.close();
     if (this.handWatcher) this.handWatcher.close();
+    this.stopHeartbeat();
   }
 });

@@ -5,18 +5,18 @@ function toRoomPatch(room) {
   return patch;
 }
 
-async function syncRoomView(repository, room, openid, now) {
-  await repository.saveRoomView(createRoomView(room, openid, now));
+async function syncRoomViewsWith(target, room, now) {
+  for (const player of room.players) {
+    await target.saveRoomView(createRoomView(room, player.openid, now));
+  }
 }
 
 async function syncRoomViews(repository, room, now) {
-  await Promise.all(
-    room.players.map((player) => syncRoomView(repository, room, player.openid, now))
-  );
+  await syncRoomViewsWith(repository, room, now);
 }
 
 module.exports = {
   toRoomPatch,
-  syncRoomView,
+  syncRoomViewsWith,
   syncRoomViews
 };

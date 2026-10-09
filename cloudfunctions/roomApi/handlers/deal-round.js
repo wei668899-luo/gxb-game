@@ -1,22 +1,20 @@
 const { drawRound } = require('../lib/cards');
-const { canDeal, createRoomView } = require('../lib/domain');
+const { canDeal } = require('../lib/domain');
 const { AppError } = require('../lib/errors');
-const { toRoomPatch, syncRoomViews } = require('../lib/room-view');
+const { toRoomPatch, syncRoomViewsWith } = require('../lib/room-view');
 
 module.exports = async function dealRound(payload, context, deps) {
-  const roomBefore = await deps.repository.getRoom(payload.roomId);
-  if (!roomBefore) throw new AppError('ROOM_NOT_FOUND');
-  if (roomBefore.ownerOpenid !== context.openid) {
-    throw new AppError('NOT_ROOM_OWNER');
-  }
-  if (roomBefore.players.length < 2) {
-    throw new AppError('NOT_ENOUGH_PLAYERS');
-  }
-
   let publicResult;
 
   await deps.repository.runRoomTransaction(payload.roomId, async (tx) => {
     const room = await tx.getRoom();
+    if (!room) throw new AppError('ROOM_NOT_FOUND');
+    if (room.ownerOpenid !== context.openid) {
+      throw new AppError('NOT_ROOM_OWNER');
+    }
+    if (room.players.length < 2) {
+      throw new AppError('NOT_ENOUGH_PLAYERS');
+    }
     if (room.lastDealRequestId === payload.requestId && room.lastDealResult) {
       publicResult = { ...room.lastDealResult, idempotent: true };
       return;
@@ -66,11 +64,9 @@ module.exports = async function dealRound(payload, context, deps) {
         dealtAt: now,
         updatedAt: now
       });
-      await tx.saveRoomView(createRoomView(nextRoom, player.openid, now));
     }
+    await syncRoomViewsWith(tx, nextRoom, now);
   });
 
-  const finalRoom = await deps.repository.getRoom(payload.roomId);
-  await syncRoomViews(deps.repository, finalRoom, deps.now());
   return publicResult;
 };

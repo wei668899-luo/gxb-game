@@ -59,4 +59,6 @@
       发下一轮
     </button>
   </view>
+
+  <button class="text-button" bindtap="onLeaveRoom">退出房间</button>
 </view>

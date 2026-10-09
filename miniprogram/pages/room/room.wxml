@@ -27,6 +27,9 @@
         <text class="tag {{item.ready ? 'ready-tag' : ''}}">
           {{item.ready ? '已准备' : (item.hasHand ? '已发牌' : '未准备')}}
         </text>
+        <text class="tag {{item.online ? 'online-tag' : 'offline-tag'}}">
+          {{item.online ? '在线' : '离线'}}
+        </text>
       </view>
     </view>
   </view>

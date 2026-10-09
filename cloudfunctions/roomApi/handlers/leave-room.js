@@ -1,10 +1,10 @@
 const { removePlayer } = require('../lib/domain');
 const { AppError } = require('../lib/errors');
-const { toRoomPatch, syncRoomViews } = require('../lib/room-view');
+const { toRoomPatch, syncRoomViewsWith } = require('../lib/room-view');
 
 module.exports = async function leaveRoom(payload, context, deps) {
   const now = deps.now();
-  const committed = await deps.repository.runRoomTransaction(payload.roomId, async (tx) => {
+  await deps.repository.runRoomTransaction(payload.roomId, async (tx) => {
     const latest = await tx.getRoom();
     if (!latest) throw new AppError('ROOM_NOT_FOUND');
     if (!latest.players.some((player) => player.openid === context.openid)) {
@@ -19,9 +19,8 @@ module.exports = async function leaveRoom(payload, context, deps) {
 
     await tx.updateRoom(toRoomPatch(nextRoom));
     await tx.removeRoomView(payload.roomId, context.openid);
-    return nextRoom;
+    await syncRoomViewsWith(tx, nextRoom, now);
   });
 
-  await syncRoomViews(deps.repository, committed, now);
   return { roomId: payload.roomId, left: true };
 };

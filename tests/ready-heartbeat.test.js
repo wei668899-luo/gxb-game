@@ -40,7 +40,10 @@ test('setReady updates the room and every view', async () => {
 
   const views = await repository.listRoomViews(room.roomId);
   const ownerView = views.find((view) => view.openid === 'owner');
+  const otherView = views.find((view) => view.openid === 'p-2');
   assert.equal(ownerView.players.find((player) => player.openid === 'owner').ready, true);
+  assert.equal(otherView.players.find((player) => player.openid === 'owner').ready, true);
+  assert.equal(otherView.players.find((player) => player.openid === 'p-2').ready, false);
 });
 
 test('heartbeat updates lastSeenAt and keeps the room alive', async () => {
@@ -52,6 +55,12 @@ test('heartbeat updates lastSeenAt and keeps the room alive', async () => {
   assert.equal(result.openid, 'owner');
   assert.equal(after.players.find((player) => player.openid === 'owner').lastSeenAt > 1000, true);
   assert.equal(after.expiresAt > before.expiresAt, true);
+
+  const views = await repository.listRoomViews(room.roomId);
+  assert.equal(views.length, 2);
+  assert.equal(views.every((view) => (
+    view.players.find((player) => player.openid === 'owner').online
+  )), true);
 });
 
 test('setReady keeps every player ready across sequential toggles', async () => {
