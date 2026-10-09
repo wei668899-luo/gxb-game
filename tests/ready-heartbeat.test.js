@@ -53,3 +53,32 @@ test('heartbeat updates lastSeenAt and keeps the room alive', async () => {
   assert.equal(after.players.find((player) => player.openid === 'owner').lastSeenAt > 1000, true);
   assert.equal(after.expiresAt > before.expiresAt, true);
 });
+
+test('setReady keeps every player ready across sequential toggles', async () => {
+  const { repository, deps, room } = await setup();
+  await setReady({ roomId: room.roomId, ready: true }, { openid: 'owner' }, deps);
+  await setReady({ roomId: room.roomId, ready: true }, { openid: 'p-2' }, deps);
+
+  const stored = await repository.getRoom(room.roomId);
+  assert.equal(stored.players.find((player) => player.openid === 'owner').ready, true);
+  assert.equal(stored.players.find((player) => player.openid === 'p-2').ready, true);
+
+  const views = await repository.listRoomViews(room.roomId);
+  const ownerView = views.find((view) => view.openid === 'owner');
+  const otherView = views.find((view) => view.openid === 'p-2');
+  assert.equal(ownerView.players.find((player) => player.openid === 'owner').ready, true);
+  assert.equal(otherView.players.find((player) => player.openid === 'p-2').ready, true);
+});
+
+test('heartbeat refreshes lastSeenAt for each player without clobbering', async () => {
+  const { repository, deps, room } = await setup();
+  await heartbeat({ roomId: room.roomId }, { openid: 'owner' }, deps);
+  await heartbeat({ roomId: room.roomId }, { openid: 'p-2' }, deps);
+
+  const stored = await repository.getRoom(room.roomId);
+  const owner = stored.players.find((player) => player.openid === 'owner');
+  const other = stored.players.find((player) => player.openid === 'p-2');
+  assert.equal(owner.lastSeenAt > 1000, true);
+  assert.equal(other.lastSeenAt > 1000, true);
+  assert.equal(owner.lastSeenAt !== other.lastSeenAt, true);
+});
