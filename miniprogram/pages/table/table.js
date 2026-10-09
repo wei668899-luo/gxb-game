@@ -39,6 +39,18 @@ function showError(error) {
   });
 }
 
+function isValidSlotRects(rects) {
+  return Array.isArray(rects) && rects.length === 4 && rects.every((rect) => (
+    rect &&
+    Number.isFinite(rect.left) &&
+    Number.isFinite(rect.top) &&
+    Number.isFinite(rect.right) &&
+    Number.isFinite(rect.bottom) &&
+    rect.right >= rect.left &&
+    rect.bottom >= rect.top
+  ));
+}
+
 Page({
   data: {
     roomId: '',
@@ -123,8 +135,9 @@ Page({
     const byId = new Map(hand.cards.map((card) => [card.id, card]));
     this.setData({
       slots: hand.slots.map((id) => cardView(byId.get(id)))
+    }, () => {
+      this.measureSlots();
     });
-    this.measureSlots();
   },
 
   measureSlots() {
@@ -145,7 +158,11 @@ Page({
   },
 
   onTouchMove(event) {
-    if (this.data.draggingIndex < 0 || !this.slotRects) return;
+    if (this.data.draggingIndex < 0) return;
+    if (!isValidSlotRects(this.slotRects)) {
+      this.measureSlots();
+      return;
+    }
     const touch = event.touches[0];
     const dropIndex = findDropIndex(this.slotRects, {
       x: touch.clientX,
