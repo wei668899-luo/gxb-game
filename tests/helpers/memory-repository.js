@@ -83,6 +83,9 @@ function createMemoryRepository() {
         async saveRoomView(view) {
           views.set(view._id, clone(view));
         },
+        async removeRoomView(roomId, openid) {
+          views.delete(`${roomId}_${openid}`);
+        },
         async saveHand(hand) {
           hands.set(hand._id, clone(hand));
         }

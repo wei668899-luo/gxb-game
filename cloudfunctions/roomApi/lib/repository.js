@@ -90,6 +90,9 @@ function createCloudRepository() {
               .doc(view._id)
               .set({ data: withoutId(view) });
           },
+          async removeRoomView(roomId, openid) {
+            await transaction.collection('room_views').doc(docId(roomId, openid)).remove();
+          },
           async saveHand(hand) {
             await transaction.collection('hands')
               .doc(hand._id)

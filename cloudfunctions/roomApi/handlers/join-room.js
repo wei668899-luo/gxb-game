@@ -1,4 +1,4 @@
-const { addPlayer } = require('../lib/domain');
+const { addPlayer, createRoomView } = require('../lib/domain');
 const { AppError } = require('../lib/errors');
 const { toRoomPatch, syncRoomViews } = require('../lib/room-view');
 
@@ -11,13 +11,21 @@ module.exports = async function joinRoom(payload, context, deps) {
   if (!room) throw new AppError('ROOM_NOT_FOUND');
 
   const now = deps.now();
-  const nextRoom = addPlayer(room, {
-    openid: context.openid,
-    nickname: payload.nickname || defaultNickname(context.openid),
-    avatarUrl: payload.avatarUrl || ''
-  }, now);
+  const committed = await deps.repository.runRoomTransaction(room._id, async (tx) => {
+    const latest = await tx.getRoom();
+    if (!latest) throw new AppError('ROOM_NOT_FOUND');
 
-  await deps.repository.updateRoom(room._id, toRoomPatch(nextRoom));
-  await syncRoomViews(deps.repository, nextRoom, now);
+    const nextRoom = addPlayer(latest, {
+      openid: context.openid,
+      nickname: payload.nickname || defaultNickname(context.openid),
+      avatarUrl: payload.avatarUrl || ''
+    }, now);
+
+    await tx.updateRoom(toRoomPatch(nextRoom));
+    await tx.saveRoomView(createRoomView(nextRoom, context.openid, now));
+    return nextRoom;
+  });
+
+  await syncRoomViews(deps.repository, committed, now);
   return { roomId: room._id, roomCode: room.roomCode };
 };

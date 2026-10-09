@@ -87,6 +87,27 @@ test('room transaction rolls back all writes when the mutator throws', async () 
   assert.equal(await repository.getHand('room-1', 1, 'owner'), null);
 });
 
+test('room transaction removes a room view inside the transaction', async () => {
+  const repository = createMemoryRepository();
+  await repository.createRoom({
+    _id: 'room-1',
+    roomCode: '123456',
+    deckRemaining: [],
+    players: []
+  });
+  await repository.saveRoomView({
+    _id: 'room-1_owner',
+    roomId: 'room-1',
+    openid: 'owner'
+  });
+
+  await repository.runRoomTransaction('room-1', async (tx) => {
+    await tx.removeRoomView('room-1', 'owner');
+  });
+
+  assert.equal((await repository.listRoomViews('room-1')).length, 0);
+});
+
 test('updateRoom ignores _id in the patch and keeps the document id', async () => {
   const repository = createMemoryRepository();
   await repository.createRoom({

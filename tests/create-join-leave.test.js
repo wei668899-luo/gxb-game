@@ -85,3 +85,76 @@ test('leaveRoom removes the player view and transfers ownership', async () => {
     ['p-2']
   );
 });
+
+test('joinRoom applies the join against the latest committed room', async () => {
+  const repository = createMemoryRepository();
+  const dependency = deps(repository);
+  const room = await createRoom(
+    { nickname: '房主', avatarUrl: '' },
+    { openid: 'owner' },
+    dependency
+  );
+
+  // Snapshot the authoritative room before a concurrent join commits.
+  const stale = await repository.getRoomByCode(room.roomCode);
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家2', avatarUrl: '' },
+    { openid: 'p-2' },
+    dependency
+  );
+
+  // Force the second join's initial room-code lookup to return the stale snapshot.
+  const staleRepository = {
+    ...repository,
+    async getRoomByCode() { return stale; }
+  };
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家3', avatarUrl: '' },
+    { openid: 'p-3' },
+    { ...dependency, repository: staleRepository }
+  );
+
+  const stored = await repository.getRoom(room.roomId);
+  assert.deepEqual(stored.players.map((player) => player.openid), ['owner', 'p-2', 'p-3']);
+  assert.deepEqual(
+    (await repository.listRoomViews(room.roomId)).map((view) => view.openid).sort(),
+    ['owner', 'p-2', 'p-3']
+  );
+});
+
+test('leaveRoom transfers ownership from the latest committed room without a stale view', async () => {
+  const repository = createMemoryRepository();
+  const dependency = deps(repository);
+  const room = await createRoom(
+    { nickname: '房主', avatarUrl: '' },
+    { openid: 'owner' },
+    dependency
+  );
+
+  // Snapshot the authoritative room before a concurrent join commits.
+  const stale = await repository.getRoom(room.roomId);
+  await joinRoom(
+    { roomCode: room.roomCode, nickname: '玩家2', avatarUrl: '' },
+    { openid: 'p-2' },
+    dependency
+  );
+
+  // Force the leave handler's outside read to return the stale (owner-only) snapshot.
+  const staleRepository = {
+    ...repository,
+    async getRoom() { return stale; }
+  };
+  await leaveRoom(
+    { roomId: room.roomId },
+    { openid: 'owner' },
+    { ...dependency, repository: staleRepository }
+  );
+
+  const stored = await repository.getRoom(room.roomId);
+  assert.equal(stored.ownerOpenid, 'p-2');
+  assert.deepEqual(stored.players.map((player) => player.openid), ['p-2']);
+  assert.deepEqual(
+    (await repository.listRoomViews(room.roomId)).map((view) => view.openid),
+    ['p-2']
+  );
+});
