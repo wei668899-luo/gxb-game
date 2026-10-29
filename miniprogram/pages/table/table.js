@@ -88,8 +88,10 @@ Page({
       this.startRoomWatch();
       this.startHeartbeat();
     } catch (error) {
-      clearActiveRoom();
-      app.globalData.activeRoomId = '';
+      if (error.code === 'ROOM_NOT_FOUND' || error.code === 'PLAYER_NOT_FOUND') {
+        clearActiveRoom();
+        app.globalData.activeRoomId = '';
+      }
       showError(error);
       setTimeout(() => wx.reLaunch({ url: '/pages/index/index' }), 800);
     }

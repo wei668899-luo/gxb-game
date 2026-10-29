@@ -56,7 +56,9 @@ test('table load failure clears active-room state and returns to the index', asy
     relaunchUrl = url;
   };
   roomApi.heartbeat = async () => {
-    throw new Error('bad');
+    const error = new Error('房间已失效');
+    error.code = 'ROOM_NOT_FOUND';
+    throw error;
   };
 
   await pageDefinition.onLoad.call(createPage(), {});
@@ -68,6 +70,29 @@ test('table load failure clears active-room state and returns to the index', asy
 
   global.setTimeout = originalSetTimeout;
   roomApi.heartbeat = originalHeartbeat;
+});
+
+test('table keeps active room after a transient load failure', async () => {
+  const originalSetTimeout = global.setTimeout;
+  const originalHeartbeat = roomApi.heartbeat;
+  let delayedNavigation = null;
+  global.setTimeout = (callback) => {
+    delayedNavigation = callback;
+    return 1;
+  };
+  roomApi.heartbeat = async () => {
+    throw new Error('network unavailable');
+  };
+  appState.globalData.activeRoomId = 'room-1';
+
+  try {
+    await pageDefinition.onLoad.call(createPage(), {});
+    assert.equal(appState.globalData.activeRoomId, 'room-1');
+    assert.equal(typeof delayedNavigation, 'function');
+  } finally {
+    global.setTimeout = originalSetTimeout;
+    roomApi.heartbeat = originalHeartbeat;
+  }
 });
 
 test('table heartbeat is replaced on show and stopped on hide', async () => {

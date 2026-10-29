@@ -26,7 +26,7 @@ function toPublicError(error) {
       ok: false,
       error: {
         code,
-        message: error.message && error.name === 'AppError'
+        message: error instanceof AppError && error.message !== code
           ? error.message
           : (messages[code] || '操作失败，请重试')
       }

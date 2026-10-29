@@ -15,6 +15,11 @@ test('toPublicError hides internal messages while preserving app error codes', (
     error: { code: 'ROOM_FULL', message: '房间已满' }
   });
 
+  assert.deepEqual(toPublicError(new AppError('ROOM_NOT_FOUND')), {
+    ok: false,
+    error: { code: 'ROOM_NOT_FOUND', message: '房间不存在或已失效' }
+  });
+
   assert.deepEqual(toPublicError(new Error('secret stack')), {
     ok: false,
     error: { code: 'INTERNAL_ERROR', message: '操作失败，请重试' }
